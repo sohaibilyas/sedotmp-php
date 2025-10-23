@@ -22,12 +22,46 @@ use SohaibIlyas\SedoTmp\SedoTmp;
 $client = new SedoTmp('your-client-id', 'your-client-secret');
 ```
 
-Authentication is handled automatically when you make your first API call.
+### Authentication
 
-If you need to access the token directly:
+#### Getting a New Access Token
+
+Call `getAccessToken()` to fetch and cache an access token:
 
 ```php
-$accessToken = $client->getAccessToken();
+$client = new SedoTmp('your-client-id', 'your-client-secret');
+
+$token = $client->getAccessToken();
+
+$categories = $client->content()->getCategories();
+$campaigns = $client->platform()->getContentCampaigns(0);
+```
+
+#### Using an Existing Access Token
+
+If you already have a token (e.g., from cache or session), use `setAccessToken()` to avoid making an authentication request:
+
+```php
+$client = new SedoTmp('your-client-id', 'your-client-secret');
+$client->setAccessToken('your-existing-token');
+
+$categories = $client->content()->getCategories();
+```
+
+#### Complete Example with Token Caching
+
+```php
+$client = new SedoTmp('your-client-id', 'your-client-secret');
+
+if (isset($_SESSION['sedo_token'])) {
+    $client->setAccessToken($_SESSION['sedo_token']);
+} else {
+    $token = $client->getAccessToken();
+    $_SESSION['sedo_token'] = $token;
+}
+
+$categories = $client->content()->getCategories();
+$campaigns = $client->platform()->getContentCampaigns(0);
 ```
 
 ### Content API

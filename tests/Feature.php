@@ -69,6 +69,35 @@ it('automatically authenticates when getting access token', function (): void {
     expect($client->getAccessToken())->toBe('test-token-123');
 });
 
+it('can set access token manually', function (): void {
+    $mockHandler = new MockHandler;
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $result = $client->setAccessToken('custom-token-789');
+
+    expect($result)->toBe($client)
+        ->and($client->getAccessToken())->toBe('custom-token-789');
+});
+
+it('reuses access token across multiple requests', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'reusable-token'])),
+        new Response(200, [], json_encode([['id' => '1', 'name' => 'Category 1']])),
+        new Response(200, [], json_encode(['campaigns' => [['id' => '1']]])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+
+    $client->content()->getCategories();
+    $client->platform()->getContentCampaigns(0);
+
+    expect($mockHandler->count())->toBe(0);
+});
+
 it('throws exception when authentication fails', function (): void {
     $mockHandler = new MockHandler([
         new Response(401, [], json_encode(['error' => 'unauthorized'])),
