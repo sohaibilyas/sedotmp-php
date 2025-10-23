@@ -67,7 +67,7 @@ $campaignData = [
             'trafficSource' => 'META',
             'trackingSettings' => [
                 'type' => 'PixelMetaTrackingSettings',
-                'pixelMetaPixelId' => '9702856439775344',
+                'pixelMetaPixelId' => '012345678910',
                 'pixelMetaLandingPageEvent' => 'Subscribe',
                 'pixelMetaClickEvent' => 'Purchase'
             ],
