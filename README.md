@@ -82,6 +82,14 @@ Retrieve content campaigns with pagination:
 $campaigns = $client->platform()->getContentCampaigns(page: 0);
 ```
 
+#### Get Single Content Campaign
+
+Retrieve a specific content campaign by ID:
+
+```php
+$campaign = $client->platform()->getContentCampaign('310a2938-6824-4bf9-afdf-994c3a673864');
+```
+
 #### Create Content Campaign
 
 Create a new content campaign:

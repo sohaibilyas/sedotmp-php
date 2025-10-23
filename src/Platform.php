@@ -40,6 +40,33 @@ final readonly class Platform
     }
 
     /**
+     * @return array<int|string, mixed>
+     */
+    public function getContentCampaign(string $id): array
+    {
+        $url = $this->client->getBaseUrl().'/platform/'.$this->client->getApiVersion().'/content-campaigns/'.$id;
+
+        try {
+            $response = $this->client->getHttpClient()->get($url, [
+                'headers' => [
+                    'Authorization' => 'Bearer '.$this->client->getAccessToken(),
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
+
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            if (! is_array($data)) {
+                throw new \RuntimeException('Invalid response format from API');
+            }
+
+            return $data;
+        } catch (GuzzleException $e) {
+            throw new \RuntimeException('Failed to fetch content campaign from SedoTMP API: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<int|string, mixed>
      */

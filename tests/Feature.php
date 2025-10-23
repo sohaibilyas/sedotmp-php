@@ -168,6 +168,26 @@ it('fetches content campaigns from platform api', function (): void {
         ->and($campaigns)->toHaveKey('campaigns');
 });
 
+it('fetches single content campaign from platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            'id' => '310a2938-6824-4bf9-afdf-994c3a673864',
+            'name' => 'Campaign 1',
+            'status' => 'active',
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $campaign = $client->platform()->getContentCampaign('310a2938-6824-4bf9-afdf-994c3a673864');
+
+    expect($campaign)->toBeArray()
+        ->and($campaign['id'])->toBe('310a2938-6824-4bf9-afdf-994c3a673864')
+        ->and($campaign['name'])->toBe('Campaign 1');
+});
+
 it('creates content campaign via platform api', function (): void {
     $mockHandler = new MockHandler([
         new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
