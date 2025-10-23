@@ -17,18 +17,12 @@ final readonly class Content
      */
     public function getCategories(): array
     {
-        $accessToken = $this->client->getAccessToken();
-
-        if ($accessToken === null) {
-            throw new \RuntimeException('Client is not authenticated. Call authenticate() first.');
-        }
-
         $url = $this->client->getBaseUrl().'/content/'.$this->client->getApiVersion().'/categories';
 
         try {
             $response = $this->client->getHttpClient()->get($url, [
                 'headers' => [
-                    'Authorization' => 'Bearer '.$accessToken,
+                    'Authorization' => 'Bearer '.$this->client->getAccessToken(),
                     'Content-Type' => 'application/json',
                 ],
             ]);

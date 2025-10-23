@@ -14,14 +14,20 @@ composer require sohaibilyas/sedotmp-php
 
 ## Usage
 
-### Authentication
+### Getting Started
 
 ```php
 use SohaibIlyas\SedoTmp\SedoTmp;
 
 $client = new SedoTmp('your-client-id', 'your-client-secret');
+```
 
-$accessToken = $client->authenticate();
+Authentication is handled automatically when you make your first API call.
+
+If you need to access the token directly:
+
+```php
+$accessToken = $client->getAccessToken();
 ```
 
 ### Content API
@@ -96,6 +102,22 @@ $client = new SedoTmp(
 
 ## Development
 
+### Testing
+
+All tests use mocked HTTP clients - no real API calls are made during testing.
+
+Run unit tests using **PEST**:
+```bash
+composer test:unit
+```
+
+Run the entire test suite:
+```bash
+composer test
+```
+
+### Code Quality
+
 Keep a modern codebase with **Pint**:
 ```bash
 composer lint
@@ -109,16 +131,6 @@ composer refactor
 Run static analysis using **PHPStan**:
 ```bash
 composer test:types
-```
-
-Run unit tests using **PEST**:
-```bash
-composer test:unit
-```
-
-Run the entire test suite:
-```bash
-composer test
 ```
 
 ## License

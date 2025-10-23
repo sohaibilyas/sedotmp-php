@@ -19,8 +19,9 @@ final class SedoTmp
         private readonly string $apiVersion = 'v1',
         private readonly string $baseUrl = 'https://api.sedotmp.com',
         private readonly string $authUrl = 'https://auth.sedotmp.com/oauth/token',
+        ?Client $httpClient = null,
     ) {
-        $this->httpClient = new Client;
+        $this->httpClient = $httpClient ?? new Client;
     }
 
     public function content(): Content
@@ -33,7 +34,21 @@ final class SedoTmp
         return new Platform($this);
     }
 
-    public function authenticate(): string
+    public function getHttpClient(): Client
+    {
+        return $this->httpClient;
+    }
+
+    public function getAccessToken(): string
+    {
+        if ($this->accessToken === null) {
+            $this->authenticate();
+        }
+
+        return $this->accessToken ?? throw new \RuntimeException('Failed to obtain access token');
+    }
+
+    private function authenticate(): void
     {
         try {
             $response = $this->httpClient->post($this->authUrl, [
@@ -52,21 +67,9 @@ final class SedoTmp
             }
 
             $this->accessToken = $data['access_token'];
-
-            return $this->accessToken;
         } catch (GuzzleException $e) {
             throw new \RuntimeException('Failed to authenticate with SedoTMP API: '.$e->getMessage(), 0, $e);
         }
-    }
-
-    public function getHttpClient(): Client
-    {
-        return $this->httpClient;
-    }
-
-    public function getAccessToken(): ?string
-    {
-        return $this->accessToken;
     }
 
     public function getClientId(): string

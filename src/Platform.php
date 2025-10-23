@@ -17,18 +17,12 @@ final readonly class Platform
      */
     public function getContentCampaigns(int $page): array
     {
-        $accessToken = $this->client->getAccessToken();
-
-        if ($accessToken === null) {
-            throw new \RuntimeException('Client is not authenticated. Call authenticate() first.');
-        }
-
         $url = $this->client->getBaseUrl().'/platform/'.$this->client->getApiVersion().'/content-campaigns?page='.$page;
 
         try {
             $response = $this->client->getHttpClient()->get($url, [
                 'headers' => [
-                    'Authorization' => 'Bearer '.$accessToken,
+                    'Authorization' => 'Bearer '.$this->client->getAccessToken(),
                     'Content-Type' => 'application/json',
                 ],
             ]);
@@ -51,18 +45,12 @@ final readonly class Platform
      */
     public function createContentCampaign(array $data): array
     {
-        $accessToken = $this->client->getAccessToken();
-
-        if ($accessToken === null) {
-            throw new \RuntimeException('Client is not authenticated. Call authenticate() first.');
-        }
-
         $url = $this->client->getBaseUrl().'/platform/'.$this->client->getApiVersion().'/content-campaigns';
 
         try {
             $response = $this->client->getHttpClient()->post($url, [
                 'headers' => [
-                    'Authorization' => 'Bearer '.$accessToken,
+                    'Authorization' => 'Bearer '.$this->client->getAccessToken(),
                     'Content-Type' => 'application/json',
                 ],
                 'json' => $data,
