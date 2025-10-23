@@ -14,6 +14,8 @@ composer require sohaibilyas/sedotmp-php
 
 ## Usage
 
+### Authentication
+
 ```php
 use SohaibIlyas\SedoTmp\SedoTmp;
 
@@ -22,14 +24,71 @@ $client = new SedoTmp('your-client-id', 'your-client-secret');
 $accessToken = $client->authenticate();
 ```
 
-### Custom URLs
+### Content API
 
-You can optionally provide custom base URL and auth URL:
+#### Get Categories
+
+```php
+$categories = $client->content()->getCategories();
+```
+
+### Platform API
+
+#### Get Content Campaigns
+
+Retrieve content campaigns with pagination:
+
+```php
+$campaigns = $client->platform()->getContentCampaigns(page: 0);
+```
+
+#### Create Content Campaign
+
+Create a new content campaign:
+
+```php
+$campaignData = [
+    'publishDomainName' => 'sohaibilyas.com',
+    'article' => [
+        'country' => 'US',
+        'locale' => 'en',
+        'featuredImage' => [
+            'generate' => true
+        ],
+        'title' => 'Summer vacation',
+        'excerpt' => 'The best summer vacation deals',
+        'topics' => ['Summer vacation'],
+        'categoryId' => '2e5c8fbb-f078-498b-82e5-d45263e21f67',
+        'type' => 'CreateArticle',
+    ],
+    'campaign' => [
+        'name' => 'Summer vacation',
+        'trackingData' => [
+            'trafficSource' => 'META',
+            'trackingSettings' => [
+                'type' => 'PixelMetaTrackingSettings',
+                'pixelMetaPixelId' => '9702856439775344',
+                'pixelMetaLandingPageEvent' => 'Subscribe',
+                'pixelMetaClickEvent' => 'Purchase'
+            ],
+            'trackingMethod' => 'PIXEL'
+        ],
+        'type' => 'CreateCampaign'
+    ],
+];
+
+$result = $client->platform()->createContentCampaign($campaignData);
+```
+
+### Custom Configuration
+
+You can optionally provide custom API version, base URL, and auth URL:
 
 ```php
 $client = new SedoTmp(
     'your-client-id',
     'your-client-secret',
+    'v1',
     'https://custom-api.sedotmp.com',
     'https://custom-auth.sedotmp.com/oauth/token'
 );
