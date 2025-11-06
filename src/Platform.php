@@ -15,6 +15,39 @@ final readonly class Platform
     /**
      * @return array<int|string, mixed>
      */
+    private function parseResponseBody(string $rawBody, string $contentType): array
+    {
+        if (str_contains($contentType, 'application/x-ndjson') || str_contains($contentType, 'ndjson')) {
+            $data = [];
+            $lines = explode("\n", $rawBody);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '') {
+                    continue;
+                }
+                if ($line === '0') {
+                    continue;
+                }
+                $decoded = json_decode($line, true);
+                if (is_array($decoded)) {
+                    $data[] = $decoded;
+                }
+            }
+
+            return $data;
+        }
+
+        $data = json_decode($rawBody, true);
+        if (! is_array($data)) {
+            throw new \RuntimeException('Invalid response format from API');
+        }
+
+        return $data;
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
     public function getContentCampaigns(int $page): array
     {
         $url = $this->client->getBaseUrl().'/platform/'.$this->client->getApiVersion().'/content-campaigns?page='.$page;
@@ -27,13 +60,10 @@ final readonly class Platform
                 ],
             ]);
 
-            $data = json_decode($response->getBody()->getContents(), true);
-
-            if (! is_array($data)) {
-                throw new \RuntimeException('Invalid response format from API');
-            }
-
-            return $data;
+            return $this->parseResponseBody(
+                $response->getBody()->getContents(),
+                $response->getHeaderLine('Content-Type')
+            );
         } catch (GuzzleException $e) {
             throw new \RuntimeException('Failed to fetch content campaigns from SedoTMP API: '.$e->getMessage(), 0, $e);
         }
@@ -54,13 +84,10 @@ final readonly class Platform
                 ],
             ]);
 
-            $data = json_decode($response->getBody()->getContents(), true);
-
-            if (! is_array($data)) {
-                throw new \RuntimeException('Invalid response format from API');
-            }
-
-            return $data;
+            return $this->parseResponseBody(
+                $response->getBody()->getContents(),
+                $response->getHeaderLine('Content-Type')
+            );
         } catch (GuzzleException $e) {
             throw new \RuntimeException('Failed to fetch content campaign from SedoTMP API: '.$e->getMessage(), 0, $e);
         }
@@ -83,13 +110,10 @@ final readonly class Platform
                 'json' => $data,
             ]);
 
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-            if (! is_array($responseData)) {
-                throw new \RuntimeException('Invalid response format from API');
-            }
-
-            return $responseData;
+            return $this->parseResponseBody(
+                $response->getBody()->getContents(),
+                $response->getHeaderLine('Content-Type')
+            );
         } catch (GuzzleException $e) {
             throw new \RuntimeException('Failed to create content campaign in SedoTMP API: '.$e->getMessage(), 0, $e);
         }
@@ -146,34 +170,10 @@ final readonly class Platform
                 ],
             ]);
 
-            $contentType = $response->getHeaderLine('Content-Type');
-            $rawBody = $response->getBody()->getContents();
-
-            if (str_contains($contentType, 'application/x-ndjson') || str_contains($contentType, 'ndjson')) {
-                $data = [];
-                $lines = explode("\n", $rawBody);
-                foreach ($lines as $line) {
-                    $line = trim($line);
-                    if (empty($line)) {
-                        continue;
-                    }
-                    $decoded = json_decode($line, true);
-                    if (is_array($decoded)) {
-                        $data[] = $decoded;
-                    }
-                }
-            } else {
-                $data = json_decode($rawBody, true);
-                if (! is_array($data)) {
-                    throw new \RuntimeException('Invalid response format from API');
-                }
-            }
-
-            if (! is_array($data)) {
-                throw new \RuntimeException('Invalid response format from API');
-            }
-
-            return $data;
+            return $this->parseResponseBody(
+                $response->getBody()->getContents(),
+                $response->getHeaderLine('Content-Type')
+            );
         } catch (GuzzleException $e) {
             throw new \RuntimeException('Failed to fetch campaign report from SedoTMP API: '.$e->getMessage(), 0, $e);
         }

@@ -205,3 +205,54 @@ it('creates content campaign via platform api', function (): void {
         ->and($result['id'])->toBe('campaign-123')
         ->and($result['status'])->toBe('created');
 });
+
+it('fetches campaign report from platform api with ndjson response', function (): void {
+    $ndjsonResponse = json_encode(['date' => '2024-01-01', 'clicks' => 100])."\n".
+                      json_encode(['date' => '2024-01-02', 'clicks' => 200])."\n".
+                      json_encode(['date' => '2024-01-03', 'clicks' => 150]);
+
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, ['Content-Type' => 'application/x-ndjson'], $ndjsonResponse),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $report = $client->platform()->getCampaignReport(
+        dimensions: ['DATE', 'COUNTRY'],
+        filter: ['startDate' => ['year' => 2024, 'month' => 1, 'day' => 1]],
+        sort: 'CLICKS,asc',
+        pagination: ['page' => 0, 'size' => 10]
+    );
+
+    expect($report)->toBeArray()
+        ->and($report)->toHaveCount(3)
+        ->and($report[0]['date'])->toBe('2024-01-01')
+        ->and($report[0]['clicks'])->toBe(100)
+        ->and($report[1]['date'])->toBe('2024-01-02')
+        ->and($report[1]['clicks'])->toBe(200)
+        ->and($report[2]['date'])->toBe('2024-01-03')
+        ->and($report[2]['clicks'])->toBe(150);
+});
+
+it('fetches campaign report with offset-based pagination', function (): void {
+    $ndjsonResponse = json_encode(['date' => '2024-01-01', 'revenue' => 50.5]);
+
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, ['Content-Type' => 'application/x-ndjson'], $ndjsonResponse),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $report = $client->platform()->getCampaignReport(
+        dimensions: ['DATE'],
+        pagination: ['offset' => 0, 'limit' => 100]
+    );
+
+    expect($report)->toBeArray()
+        ->and($report)->toHaveCount(1)
+        ->and($report[0]['date'])->toBe('2024-01-01');
+});
