@@ -146,7 +146,28 @@ final readonly class Platform
                 ],
             ]);
 
-            $data = json_decode($response->getBody()->getContents(), true);
+            $contentType = $response->getHeaderLine('Content-Type');
+            $rawBody = $response->getBody()->getContents();
+
+            if (str_contains($contentType, 'application/x-ndjson') || str_contains($contentType, 'ndjson')) {
+                $data = [];
+                $lines = explode("\n", $rawBody);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) {
+                        continue;
+                    }
+                    $decoded = json_decode($line, true);
+                    if (is_array($decoded)) {
+                        $data[] = $decoded;
+                    }
+                }
+            } else {
+                $data = json_decode($rawBody, true);
+                if (! is_array($data)) {
+                    throw new \RuntimeException('Invalid response format from API');
+                }
+            }
 
             if (! is_array($data)) {
                 throw new \RuntimeException('Invalid response format from API');
