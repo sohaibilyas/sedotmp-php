@@ -128,6 +128,72 @@ $campaignData = [
 $result = $client->platform()->createContentCampaign($campaignData);
 ```
 
+#### Get Campaign Report
+
+Retrieve campaign report data with dimensions, filters, sorting, and pagination:
+
+```php
+$report = $client->platform()->getCampaignReport(
+    dimensions: ['DATE', 'HOUR', 'COUNTRY'],
+    filter: [
+        'startDate' => ['year' => 2024, 'month' => 1, 'day' => 1],
+        'endDate' => ['year' => 2024, 'month' => 1, 'day' => 31],
+        'campaignId' => '310a2938-6824-4bf9-afdf-994c3a673864',
+    ],
+    sort: 'CLICKS,asc',
+    pagination: ['page' => 0, 'size' => 10]
+);
+```
+
+**Available dimensions:**
+- `DATE`
+- `HOUR`
+- `PARTNER`
+- `CAMPAIGN_ID`
+- `COUNTRY`
+- `DEVICE_TYPE`
+
+**Available sort fields:**
+- `RELATED_LINKS_REQUESTS`
+- `RELATED_LINKS_IMPRESSIONS`
+- `RELATED_LINKS_CLICKS`
+- `RELATED_LINKS_RPM`
+- `AD_REQUESTS`
+- `MATCHED_AD_REQUESTS`
+- `AD_IMPRESSIONS`
+- `IMPRESSIONS`
+- `CLICKS`
+- `CTR`
+- `AD_CTR`
+- `CPC`
+- `AD_RPM`
+- `CONVERSION_RATE`
+- `REVENUE`
+- `DATE`
+- `HOUR`
+- `PARTNER`
+- `CAMPAIGN_ID`
+- `COUNTRY`
+- `DEVICE_TYPE`
+
+**Pagination options:**
+
+Use page-based pagination:
+```php
+$report = $client->platform()->getCampaignReport(
+    pagination: ['page' => 0, 'size' => 10]
+);
+```
+
+Or use offset-based pagination:
+```php
+$report = $client->platform()->getCampaignReport(
+    pagination: ['offset' => 0, 'limit' => 100]
+);
+```
+
+**Note:** If neither `startDate` nor `endDate` is provided in the filter, they will default to yesterday's date.
+
 ### Custom Configuration
 
 You can optionally provide custom API version, base URL, and auth URL:
