@@ -256,3 +256,87 @@ it('fetches campaign report with offset-based pagination', function (): void {
         ->and($report)->toHaveCount(1)
         ->and($report[0]['date'])->toBe('2024-01-01');
 });
+
+it('fetches keyword performance report from platform api with ndjson response', function (): void {
+    $ndjsonResponse = json_encode([
+        'partner' => 'partner2',
+        'date' => '2024-01-01',
+        'campaignId' => '1',
+        'campaignName' => 'summer vacation',
+        'country' => 'US',
+        'deviceType' => 'Desktop',
+        'keywords' => 'summer+vacation',
+        'clicks' => 100,
+        'searches' => 200,
+        'coverage' => 1,
+        'coveragePercent' => 0.5,
+        'estimatedRevenue' => 1000,
+        'ctr' => 0.1,
+        'estimatedCpc' => 0.5,
+    ])."\n".json_encode([
+        'partner' => 'partner1',
+        'date' => '2024-01-02',
+        'campaignId' => '2',
+        'campaignName' => 'winter sale',
+        'country' => 'DE',
+        'deviceType' => 'Mobile',
+        'keywords' => 'winter+sale',
+        'clicks' => 50,
+        'searches' => 100,
+        'coverage' => 1,
+        'coveragePercent' => 0.5,
+        'estimatedRevenue' => 500,
+        'ctr' => 0.2,
+        'estimatedCpc' => 0.4,
+    ]);
+
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, ['Content-Type' => 'application/x-ndjson'], $ndjsonResponse),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $report = $client->platform()->getKeywordPerformanceReport(
+        dimensions: ['DATE', 'COUNTRY', 'DEVICE_TYPE'],
+        filter: ['startDate' => ['year' => 2024, 'month' => 1, 'day' => 1]],
+        sort: 'CLICKS,asc',
+        pagination: ['page' => 0, 'size' => 10]
+    );
+
+    expect($report)->toBeArray()
+        ->and($report)->toHaveCount(2)
+        ->and($report[0]['keywords'])->toBe('summer+vacation')
+        ->and($report[0]['clicks'])->toBe(100)
+        ->and($report[0]['estimatedRevenue'])->toBe(1000)
+        ->and($report[1]['keywords'])->toBe('winter+sale')
+        ->and($report[1]['clicks'])->toBe(50);
+});
+
+it('fetches keyword performance report with offset-based pagination', function (): void {
+    $ndjsonResponse = json_encode([
+        'date' => '2024-01-01',
+        'keywords' => 'test+keyword',
+        'clicks' => 75,
+        'estimatedRevenue' => 250.5,
+    ]);
+
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, ['Content-Type' => 'application/x-ndjson'], $ndjsonResponse),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $report = $client->platform()->getKeywordPerformanceReport(
+        dimensions: ['DATE'],
+        pagination: ['offset' => 0, 'limit' => 100]
+    );
+
+    expect($report)->toBeArray()
+        ->and($report)->toHaveCount(1)
+        ->and($report[0]['keywords'])->toBe('test+keyword')
+        ->and($report[0]['clicks'])->toBe(75);
+});
