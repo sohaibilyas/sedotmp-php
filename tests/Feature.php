@@ -512,3 +512,112 @@ it('deletes postback template via platform api', function (): void {
 
     expect($mockHandler->count())->toBe(0);
 });
+
+it('fetches traffic source templates from platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            [
+                'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+                'name' => 'Meta-Template',
+                'trafficSource' => 'META',
+                'trackingMethod' => 'PIXEL',
+                'trackingSettings' => [],
+                'partner' => 'partner2',
+            ],
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $templates = $client->platform()->getTrafficSourceTemplates();
+
+    expect($templates)->toBeArray()
+        ->and($templates)->toHaveCount(1)
+        ->and($templates[0]['trafficSource'])->toBe('META');
+});
+
+it('creates traffic source template via platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+            'name' => 'Meta-Template',
+            'trafficSource' => 'META',
+            'trackingMethod' => 'PIXEL',
+            'partner' => 'partner2',
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $result = $client->platform()->createTrafficSourceTemplate([
+        'name' => 'Meta-Template',
+        'trafficSource' => 'META',
+        'trackingMethod' => 'PIXEL',
+    ]);
+
+    expect($result)->toBeArray()
+        ->and($result['id'])->toBe('cf1a429f-e596-4648-83a2-5a3045b2276a')
+        ->and($result['trafficSource'])->toBe('META');
+});
+
+it('fetches single traffic source template from platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+            'name' => 'Meta-Template',
+            'trafficSource' => 'META',
+            'trackingMethod' => 'PIXEL',
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $template = $client->platform()->getTrafficSourceTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+
+    expect($template)->toBeArray()
+        ->and($template['id'])->toBe('cf1a429f-e596-4648-83a2-5a3045b2276a');
+});
+
+it('updates traffic source template via platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+            'name' => 'Updated-Meta-Template',
+            'trafficSource' => 'META',
+            'trackingMethod' => 'S2S',
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $result = $client->platform()->updateTrafficSourceTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a', [
+        'name' => 'Updated-Meta-Template',
+        'trafficSource' => 'META',
+        'trackingMethod' => 'S2S',
+    ]);
+
+    expect($result)->toBeArray()
+        ->and($result['name'])->toBe('Updated-Meta-Template');
+});
+
+it('deletes traffic source template via platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(204, [], ''),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $client->platform()->deleteTrafficSourceTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+
+    expect($mockHandler->count())->toBe(0);
+});

@@ -194,6 +194,205 @@ $report = $client->platform()->getCampaignReport(
 
 **Note:** If neither `startDate` nor `endDate` is provided in the filter, they will default to yesterday's date.
 
+#### Get Keyword Performance Report
+
+Retrieve keyword performance data with dimensions, filters, sorting, and pagination:
+
+```php
+$report = $client->platform()->getKeywordPerformanceReport(
+    dimensions: ['DATE', 'COUNTRY', 'DEVICE_TYPE'],
+    filter: [
+        'startDate' => ['year' => 2024, 'month' => 1, 'day' => 1],
+        'endDate' => ['year' => 2024, 'month' => 1, 'day' => 31],
+    ],
+    sort: 'CLICKS,desc',
+    pagination: ['page' => 0, 'size' => 50]
+);
+```
+
+**Available dimensions:**
+- `DATE`
+- `PARTNER`
+- `CAMPAIGN_ID`
+- `COUNTRY`
+- `DEVICE_TYPE`
+
+### Postback Templates
+
+Postback templates define reusable S2S callback configurations for conversion events.
+
+#### Get All Postback Templates
+
+```php
+$templates = $client->platform()->getPostbackTemplates();
+
+$templates = $client->platform()->getPostbackTemplates(
+    filter: ['name' => 'My Template'],
+    page: ['page' => 0, 'size' => 10, 'sort' => 'name,asc']
+);
+```
+
+#### Get Single Postback Template
+
+```php
+$template = $client->platform()->getPostbackTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+```
+
+#### Create Postback Template
+
+```php
+$template = $client->platform()->createPostbackTemplate([
+    'name' => 'My Postback Template',
+    'postbacks' => [
+        [
+            'eventName' => 'CLICK',
+            'url' => 'https://your-tracker.com/postback?click_id={click_id}&payout={epayout}',
+            'clickIdParam' => 'click_id',
+        ],
+        [
+            'eventName' => 'SEARCH',
+            'url' => 'https://your-tracker.com/postback?click_id={click_id}&event=search',
+            'clickIdParam' => 'click_id',
+        ],
+    ],
+]);
+```
+
+#### Update Postback Template
+
+```php
+$template = $client->platform()->updatePostbackTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a', [
+    'name' => 'Updated Template Name',
+    'postbacks' => [
+        [
+            'eventName' => 'CLICK',
+            'url' => 'https://your-tracker.com/postback?click_id={click_id}',
+            'clickIdParam' => 'click_id',
+        ],
+    ],
+]);
+```
+
+#### Delete Postback Template
+
+```php
+$client->platform()->deletePostbackTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+```
+
+### Traffic Source Templates
+
+Traffic source templates define reusable tracking configurations for different traffic sources.
+
+#### Get All Traffic Source Templates
+
+```php
+$templates = $client->platform()->getTrafficSourceTemplates();
+
+$templates = $client->platform()->getTrafficSourceTemplates(
+    filter: ['name' => 'Meta Template'],
+    page: ['page' => 0, 'size' => 10]
+);
+```
+
+#### Get Single Traffic Source Template
+
+```php
+$template = $client->platform()->getTrafficSourceTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+```
+
+#### Create Traffic Source Template
+
+```php
+$template = $client->platform()->createTrafficSourceTemplate([
+    'name' => 'Meta Pixel Template',
+    'trafficSource' => 'META',
+    'trackingMethod' => 'PIXEL',
+    'trackingSettings' => [
+        'type' => 'PixelMetaTrackingSettings',
+        'pixelMetaPixelId' => '012345678910',
+        'pixelMetaLandingPageEvent' => 'Subscribe',
+        'pixelMetaClickEvent' => 'Purchase',
+    ],
+]);
+```
+
+#### Update Traffic Source Template
+
+```php
+$template = $client->platform()->updateTrafficSourceTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a', [
+    'name' => 'Updated Meta Template',
+    'trafficSource' => 'META',
+    'trackingMethod' => 'S2S',
+    'trackingSettings' => [
+        'type' => 'S2sMetaTrackingSettings',
+        's2sMetaPixelId' => '012345678910',
+        's2sMetaAccessToken' => 'your-access-token',
+    ],
+]);
+```
+
+#### Delete Traffic Source Template
+
+```php
+$client->platform()->deleteTrafficSourceTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+```
+
+### Using Templates with Content Campaigns
+
+You can reference templates when creating content campaigns to automatically apply pre-configured tracking settings:
+
+```php
+$campaignData = [
+    'publishDomainName' => 'example.com',
+    'article' => [
+        'country' => 'US',
+        'locale' => 'en',
+        'featuredImage' => ['generate' => true],
+        'title' => 'Summer vacation deals',
+        'topics' => ['Summer vacation'],
+        'categoryId' => '2e5c8fbb-f078-498b-82e5-d45263e21f67',
+        'type' => 'CreateArticle',
+    ],
+    'campaign' => [
+        'name' => 'Summer Campaign',
+        'trackingData' => [
+            'trafficSourceTemplateId' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+            'postbackTemplateId' => 'df2b530g-f697-5759-94b3-6b4156c3387b',
+        ],
+        'type' => 'CreateCampaign',
+    ],
+];
+
+$result = $client->platform()->createContentCampaign($campaignData);
+```
+
+You can also reference templates by name:
+
+```php
+$campaignData = [
+    'publishDomainName' => 'example.com',
+    'article' => [
+        'country' => 'US',
+        'locale' => 'en',
+        'featuredImage' => ['generate' => true],
+        'title' => 'Winter sale promotions',
+        'topics' => ['Winter sale'],
+        'categoryId' => '2e5c8fbb-f078-498b-82e5-d45263e21f67',
+        'type' => 'CreateArticle',
+    ],
+    'campaign' => [
+        'name' => 'Winter Campaign',
+        'trackingData' => [
+            'trafficSourceTemplateName' => 'Meta Pixel Template',
+            'postbackTemplateName' => 'My Postback Template',
+        ],
+        'type' => 'CreateCampaign',
+    ],
+];
+
+$result = $client->platform()->createContentCampaign($campaignData);
+```
+
 ### Custom Configuration
 
 You can optionally provide custom API version, base URL, and auth URL:
