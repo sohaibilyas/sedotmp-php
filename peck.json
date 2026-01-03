@@ -5,7 +5,8 @@
             "php",
             "sedo",
             "tmp",
-            "sedotmp"
+            "sedotmp",
+            "postback"
         ]
     }
 }

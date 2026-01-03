@@ -340,3 +340,175 @@ it('fetches keyword performance report with offset-based pagination', function (
         ->and($report[0]['keywords'])->toBe('test+keyword')
         ->and($report[0]['clicks'])->toBe(75);
 });
+
+it('fetches postback templates from platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            [
+                'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+                'name' => 'Template-123',
+                'postbacks' => [
+                    [
+                        'eventName' => 'CLICK',
+                        'url' => 'https://your-tracking-url.com/cf/cv?click_id={click_id}&payout={epayout}',
+                        'clickIdParam' => 'click_id',
+                    ],
+                ],
+                'partner' => 'partner2',
+                'createdDate' => '2024-01-01T18:00:00Z',
+                'createdBy' => 'John Doe',
+            ],
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $templates = $client->platform()->getPostbackTemplates();
+
+    expect($templates)->toBeArray()
+        ->and($templates)->toHaveCount(1)
+        ->and($templates[0]['id'])->toBe('cf1a429f-e596-4648-83a2-5a3045b2276a')
+        ->and($templates[0]['name'])->toBe('Template-123');
+});
+
+it('fetches postback templates with filter and pagination', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            [
+                'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+                'name' => 'Template-123',
+                'postbacks' => [],
+            ],
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $templates = $client->platform()->getPostbackTemplates(
+        filter: ['name' => 'Template-123'],
+        page: ['page' => 0, 'size' => 10, 'sort' => 'name,asc']
+    );
+
+    expect($templates)->toBeArray()
+        ->and($templates)->toHaveCount(1);
+});
+
+it('creates postback template via platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+            'name' => 'Template-123',
+            'postbacks' => [
+                [
+                    'eventName' => 'CLICK',
+                    'url' => 'https://your-tracking-url.com/cf/cv?click_id={click_id}&payout={epayout}',
+                    'clickIdParam' => 'click_id',
+                ],
+            ],
+            'partner' => 'partner2',
+            'createdDate' => '2024-01-01T18:00:00Z',
+            'createdBy' => 'John Doe',
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $result = $client->platform()->createPostbackTemplate([
+        'name' => 'Template-123',
+        'postbacks' => [
+            [
+                'eventName' => 'CLICK',
+                'url' => 'https://your-tracking-url.com/cf/cv?click_id={click_id}&payout={epayout}',
+                'clickIdParam' => 'click_id',
+            ],
+        ],
+    ]);
+
+    expect($result)->toBeArray()
+        ->and($result['id'])->toBe('cf1a429f-e596-4648-83a2-5a3045b2276a')
+        ->and($result['name'])->toBe('Template-123')
+        ->and($result['postbacks'])->toHaveCount(1);
+});
+
+it('fetches single postback template from platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+            'name' => 'Template-123',
+            'postbacks' => [
+                [
+                    'eventName' => 'CLICK',
+                    'url' => 'https://your-tracking-url.com/cf/cv?click_id={click_id}&payout={epayout}',
+                    'clickIdParam' => 'click_id',
+                ],
+            ],
+            'partner' => 'partner2',
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $template = $client->platform()->getPostbackTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+
+    expect($template)->toBeArray()
+        ->and($template['id'])->toBe('cf1a429f-e596-4648-83a2-5a3045b2276a')
+        ->and($template['name'])->toBe('Template-123');
+});
+
+it('updates postback template via platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(200, [], json_encode([
+            'id' => 'cf1a429f-e596-4648-83a2-5a3045b2276a',
+            'name' => 'Updated-Template',
+            'postbacks' => [
+                [
+                    'eventName' => 'SEARCH',
+                    'url' => 'https://your-tracking-url.com/cf/cv?click_id={click_id}',
+                    'clickIdParam' => 'click_id',
+                ],
+            ],
+            'partner' => 'partner2',
+        ])),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $result = $client->platform()->updatePostbackTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a', [
+        'name' => 'Updated-Template',
+        'postbacks' => [
+            [
+                'eventName' => 'SEARCH',
+                'url' => 'https://your-tracking-url.com/cf/cv?click_id={click_id}',
+                'clickIdParam' => 'click_id',
+            ],
+        ],
+    ]);
+
+    expect($result)->toBeArray()
+        ->and($result['id'])->toBe('cf1a429f-e596-4648-83a2-5a3045b2276a')
+        ->and($result['name'])->toBe('Updated-Template');
+});
+
+it('deletes postback template via platform api', function (): void {
+    $mockHandler = new MockHandler([
+        new Response(200, [], json_encode(['access_token' => 'test-token-123'])),
+        new Response(204, [], ''),
+    ]);
+    $handlerStack = HandlerStack::create($mockHandler);
+    $mockClient = new Client(['handler' => $handlerStack]);
+
+    $client = new SedoTmp('test-client-id', 'test-client-secret', httpClient: $mockClient);
+    $client->platform()->deletePostbackTemplate('cf1a429f-e596-4648-83a2-5a3045b2276a');
+
+    expect($mockHandler->count())->toBe(0);
+});
